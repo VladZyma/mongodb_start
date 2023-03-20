@@ -17,3 +17,19 @@ connectToDb((err) => {
     console.log(`DB connection error: ${err}`);
   }
 });
+
+app.get('/movies', (req, res) => {
+  const movies = [];
+
+  db
+  .collection('movies')
+  .find()
+  .sort({title: 1})
+  .forEach(movie => movies.push(movie))
+  .then(() => {
+    res.status(200).json(movies);
+  })
+  .catch(() => {
+    res.status(500).json({error: 'Something went wrong....'});
+  });
+});
