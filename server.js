@@ -7,6 +7,9 @@ const PORT = 3000;
 
 const app = express();
 
+app.use(express.json());
+// app.use(express.urlencoded({extended: true}));
+
 let db;
 connectToDb((err) => {
   if (!err) {
@@ -68,4 +71,30 @@ app.delete('/movies/:id', (req, res) => {
   } else {
     handleError(res, 'Wrong id');
   }
-})
+});
+
+app.post('/movies', (req, res) => {
+  db
+    .collection('movies')
+    .insertOne(req.body)
+    .then((result) => {
+      res.status(201).json(result);
+    })
+    .catch(() => handleError(res, 'Something went wrong....'));
+});
+
+app.patch('/movies/:id', (req, res) => {
+  const {id} = req.params;
+
+  if (ObjectId.isValid(id)) {
+    db
+      .collection('movies')
+      .updateOne({_id: new ObjectId(id)}, {$set: req.body})
+      .then((result) => {
+        res.status(201).json(result)
+      })
+      .catch(() => handleError(res, 'Something went wrong....'));
+  } else {
+    handleError(res, 'Wrong id');
+  }
+});
