@@ -1,4 +1,5 @@
 const express = require('express');
+const ObjectId = require('mongodb').ObjectId;
 
 const { connectToDb, getDb } = require('./db');
 
@@ -18,6 +19,10 @@ connectToDb((err) => {
   }
 });
 
+const handleError = (res, error) => {
+  res.status(500).json({error});
+}
+
 app.get('/movies', (req, res) => {
   const movies = [];
 
@@ -29,7 +34,38 @@ app.get('/movies', (req, res) => {
   .then(() => {
     res.status(200).json(movies);
   })
-  .catch(() => {
-    res.status(500).json({error: 'Something went wrong....'});
-  });
+  .catch(() => handleError(res, 'Something went wrong....'));
 });
+
+app.get('/movies/:id', (req, res) => {
+  const {id} = req.params;
+
+  if (ObjectId.isValid(id)) {
+    db
+      .collection('movies')
+      .findOne({ _id: new ObjectId(id)})
+      .then((doc) => {
+        res.status(200).json(doc)
+      })
+      .catch(() => handleError(res, 'Something went wrong....'));
+  } else {
+    handleError(res, 'Wrong id');
+  }
+
+});
+
+app.delete('/movies/:id', (req, res) => {
+  const {id} = req.params;
+
+  if (ObjectId.isValid(id)) {
+    db
+      .collection('movies')
+      .deleteOne({_id: new ObjectId(id)})
+      .then((result) => {
+        res.status(200).json(result);
+      })
+      .catch(() => handleError(res, 'Something went wrong....'));
+  } else {
+    handleError(res, 'Wrong id');
+  }
+})
